@@ -25,7 +25,7 @@ The two platforms above are tutoring systems. Alongside them I've built the same
 
 **Strata Manager** — a case-management system for a Sydney strata complex. It turns years of scattered email into structured, evidence-backed case files for formal disputes. It's a **controlled multi-stage pipeline** with role-based prompts (classification → summarisation → legal research → letter drafting). The stage order lives in my code *by design* — it's a high-compliance, auditable legal context, where predictability matters more than flexibility. 354 emails → 75 cross-linked cases, with citation tracking and an audit trail.
 
-**[Product-Listing Agent](https://github.com/larrydu2002/product-agent)** — a genuine **agent**, built on the Anthropic SDK as a hand-written tool-use loop (no framework). Given a sparse product and a set of tools, the *model* decides which tool to call, in what order, and when it's done. The control flow belongs to the model, not my code — my loop only executes the tool the model names and hands the result back.
+**[Product-Listing Agent](https://github.com/larrydu2002/product-agent)** — a genuine **agent**, built on the Anthropic API as a hand-written tool-use loop (no agent framework). Given a sparse product and a set of tools, the *model* decides which tool to call, in what order, and when it's done. The control flow belongs to the model, not my code — my loop only executes the tool the model names and hands the result back.
 
 | | **Pipeline** (Strata) | **Agent** (Product-Listing) |
 |---|---|---|
@@ -35,6 +35,10 @@ The two platforms above are tutoring systems. Alongside them I've built the same
 | Best for | Regulated / high-stakes work where the steps must be guaranteed | Open-ended tasks where the right path isn't known in advance |
 
 Neither is "better." A controlled pipeline is a **design choice for predictability and auditability**, not a missing capability. The judgement is knowing *when* to reach for each.
+
+## Going lower — the transport layer underneath tool-use
+
+The agent above calls tools in-process — a function call, no protocol. To understand what changes when tools live in a *separate* process, I hand-wrote a minimal **[MCP server + client](https://github.com/larrydu2002/mcp-from-scratch)** over raw JSON-RPC on stdio, no MCP SDK. It speaks the three core MCP methods (initialize, tools/list, tools/call) and made me work through the transport details an SDK would hide: the client launches the server as a subprocess with two-way pipes, stdout is reserved for protocol JSON (logging goes to stderr), and responses are paired to requests by id. It's a learning implementation of the stdio happy path — I deliberately stopped short of real version negotiation, HTTP transport, and resources/sampling, and the README says so.
 
 ---
 
@@ -116,7 +120,7 @@ A real Extension 2 HSC mock question. Student photographs their handwritten solu
 ## Tech, plainly
 
 **Build:** React 18 · Vite · Tailwind · FastAPI (Python) · SQLite (aiosqlite) · REST APIs
-**AI / LLM:** Claude API (Opus, Sonnet, Haiku) · OpenAI API (Whisper STT, TTS, GPT) · Claude Vision · prompt & pipeline design · hand-written tool-use agents (Anthropic SDK) · multi-model QA workflows · exploring Claude orchestration via MCP
+**AI / LLM:** Claude API (Opus, Sonnet, Haiku) · OpenAI API (Whisper STT, TTS, GPT) · Claude Vision · prompt & pipeline design · hand-written tool-use loop on the Anthropic API (no agent framework) · multi-model QA workflows · hand-written MCP server + client over raw JSON-RPC (stdio, no MCP SDK)
 **Systems:** JWT auth · streaming chat · multi-tab session isolation · sandboxed code execution · production deployment on a Sydney VPS
 **Foundations:** Software engineering (C/C++, SQL) from earlier career; 15+ years between business and engineering teams at Oracle, Citrix, IBM.
 
